@@ -39,7 +39,7 @@ cd Servidor-produtosAPI-TS
 ### 2. Instalar Dependencias
 
 ```bash
-node install
+npm install
 ```
 
 ### 3. Configurar o .env da aplicaçao. Exemplo:
