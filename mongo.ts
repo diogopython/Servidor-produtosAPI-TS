@@ -4,9 +4,10 @@ import dotenv from "dotenv"
 
 dotenv.config();
 
-const uri = "mongodb://diogo:Diogo.908@72.60.1.190:27017"; // URL do MongoDB
+const uri = String(process.env.MONGO_URL); // URL do MongoDB
 const client = new MongoClient(uri);
-const dbName = "produtosdb";
+const dbName = process.env.MONGO_DB;
+
 
 export async function registrarTokenUsado(token: string): Promise<[boolean, any?]> {
   try {
