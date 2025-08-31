@@ -1,0 +1,5 @@
+Tests/
+.env
+log-server.log
+Produtos-CLI-Web/
+node_modules/
