@@ -58,8 +58,6 @@ router.post("/login", async (req: Request, res: Response) => {
     );
     conn.release();
 
-    console.log("rows:", rows);
-
     if (!rows) {
       LogEvent(`[${HoraAtual()}] Usuário não encontrado: ${email}`);
       return res.status(401).json({ erro: "Usuário não encontrado" });
