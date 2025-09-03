@@ -6,68 +6,107 @@ Uma **API RESTful** para gerenciamento de produtos, construída com **TypeScript
 
 ## Tecnologias Utilizadas
 
-- **Node.js**: Ambiente de execução TypeScript/JavaScript no servidor  
-- **Express**: Framework para criação de APIs RESTful  
-- **MongoDB**: Banco de dados NoSQL para armazenamento de dados  
-- **MariaDB**: Banco de dados relacional para gerenciamento de informações estruturadas  
+* **Node.js + TypeScript**
+* **Express**
+* **MongoDB**
+* **MariaDB**
+* **Docker**
 
 ---
 
 ## Funcionalidades
 
-- CRUD completo de produtos:
-  - Criar novos produtos  
-  - Listar produtos  
-  - Atualizar produtos existentes  
-  - Deletar produtos
-  - Pesquisar por produtos
-- Autenticação básica de usuários  
-- Registro de logs de operações  
-- Suporte a múltiplos bancos de dados (**MongoDB** e **MariaDB**)  
+* CRUD completo de produtos:
+
+  * Criar novos produtos
+  * Listar produtos
+  * Atualizar produtos existentes
+  * Deletar produtos
+  * Pesquisar por produtos
+* Autenticação com JWT (exemplo básico)
+* Registro de logs de operações
+* Suporte a múltiplos bancos de dados (**MongoDB** e **MariaDB**)
 
 ---
 
 ## Instalação e Configuração
 
-### 1. Clone o repositório
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/diogopython/Servidor-produtosAPI-TS.git
 cd Servidor-produtosAPI-TS
 ```
 
-### 2. Instalar Dependencias
+### 2. Instalar dependências
 
 ```bash
 npm install
 ```
 
-### 3. Configurar o .env da aplicaçao. Exemplo:
-```bash
-# banco de dados
+### 3. Configurar o arquivo `.env` (exemplo)
+
+```env
+# MariaDB
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=*senha*
+DB_PASSWORD=senha
 DB_DATABASE=produtosAPI
+DB_PORT=3306
 
-# token
-JWT_SECRET=983hye983gr43t53fg5hy24ytg
+# Token JWT
+JWT_SECRET=seu_segredo_jwt_aqui
 JWT_EXPIRES_IN=1h
 
-# mongodb
-MONGO_URL="mongodb://user:senha@localhost:27017"
+# MongoDB
+MONGO_URL=mongodb://user:senha@localhost:27017
 MONGO_DB=produtosdb
 
-# porta
+# Porta da API
 PORT=3000
 
-# ativaçao
+# Manutenção
 VALID=true
-MSG="Estamos em manutençao, por favor aquarde e tente novamente mais tartde."
+MSG='Estamos em manutenção, por favor aguarde e tente novamente mais tarde.'
 ```
 
-### 4. Rodar a API
+### 4. Rodar a API em modo de desenvolvimento
 
 ```bash
 npm run dev
 ```
+
+---
+
+## Docker (build & run)
+
+### Build (exemplo)
+
+```bash
+# Node 22 + Alpine
+docker build -t api-produtos-node22-alpine -f Docker/node22-alpine.Dockerfile .
+
+# Node 22 + Debian
+docker build -t api-produtos-node22-debian -f Docker/node22.Dockerfile .
+
+# Node 18 + Debian
+docker build -t api-produtos-node18-debian -f Docker/node18.Dockerfile .
+```
+
+### Run (exemplo)
+
+```bash
+docker run --network sua_network \
+  --env-file /home/diogo/TS/.env \
+  -p 3000:3000 \
+  --name api-produtos \
+  api-produtos-node22-alpine
+```
+
+> Se preferir, rode em uma linha só:
+
+```bash
+docker run --network sua_network --env-file /home/diogo/TS/.env -p 3000:3000 --name api-produtos api-produtos-node22-alpine
+```
+
+---
