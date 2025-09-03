@@ -23,7 +23,7 @@ Uma **API RESTful** para gerenciamento de produtos, construída com **TypeScript
   * Atualizar produtos existentes
   * Deletar produtos
   * Pesquisar por produtos
-* Autenticação com JWT (exemplo básico)
+* Autenticação com JWT
 * Registro de logs de operações
 * Suporte a múltiplos bancos de dados (**MongoDB** e **MariaDB**)
 
