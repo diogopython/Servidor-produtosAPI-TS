@@ -96,16 +96,18 @@ docker build -t api-produtos-node18-debian -f Docker/node18.Dockerfile .
 ### Run (exemplo)
 
 ```bash
-docker run --env-file /your/path/.env \
-  -p 3000:3000 \
+docker run -d \
   --name api-produtos \
-  api-produtos-node22-alpine
+  --env-file /your/path/.env \
+  -v /your/path/logs:/app/logs \
+  -p 3000:3000 \
+  api-produtos-node22
 ```
 
 > Se preferir, rode em uma linha só:
 
 ```bash
-docker run --env-file /your/path/.env -p 3000:3000 --name api-produtos api-produtos-node22-alpine
+docker run -d --name api-produtos --env-file /your/path/.env -v /your/path/logs:/app/logs -p 3000:3000 api-produtos-node22
 ```
 
 ---

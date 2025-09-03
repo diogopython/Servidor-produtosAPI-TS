@@ -1,4 +1,5 @@
 import { promises as fs } from "fs";
+import { existsSync } from "fs"
 
 // Função para pegar data/hora formatada
 export function HoraAtual(): string {
@@ -6,7 +7,7 @@ export function HoraAtual(): string {
   const pad = (n: number): string => n.toString().padStart(2, "0");
 
   const ano = agora.getFullYear();
-  const mes = pad(agora.getMonth() + 1); // meses começam em 0
+  const mes = pad(agora.getMonth() + 1);
   const dia = pad(agora.getDate());
   const hora = pad(agora.getHours());
   const minuto = pad(agora.getMinutes());
@@ -21,7 +22,8 @@ export async function LogEvent(message: string): Promise<void> {
 
   console.log(logLine.trim()); // imprime no console
   try {
-    await fs.appendFile("./log-server.log", logLine);
+    if (!existsSync("logs")) await fs.mkdir("logs");
+    await fs.appendFile("./logs/log-server.log", logLine);
   } catch (err) {
     console.error("Erro ao escrever no log:", err);
   }

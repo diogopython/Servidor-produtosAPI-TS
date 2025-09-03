@@ -8,7 +8,6 @@ const uri = String(process.env.MONGO_URL); // URL do MongoDB
 const client = new MongoClient(uri);
 const dbName = process.env.MONGO_DB;
 
-
 export async function registrarTokenUsado(token: string): Promise<[boolean, any?]> {
   try {
     await client.connect();

@@ -12,12 +12,18 @@ declare global {
   }
 }
 
-// Função para verificar token JWT
 function verificarTokenJWT(token: string): JwtPayload & { id: string; ip: string } {
   if (!token) throw new Error("Token ausente");
+
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET não definido");
-  return jwt.verify(token, secret) as JwtPayload & { id: string; ip: string };
+
+  try {
+    const decoded = jwt.verify(token, secret) as JwtPayload & { id: string; ip: string };
+    return decoded;
+  } catch (err) {
+    throw new Error("Token inválido ou expirado");
+  }
 }
 
 // Middleware principal

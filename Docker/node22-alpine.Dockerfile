@@ -30,5 +30,8 @@ RUN npm install --only=production
 # Copiar arquivos compilados
 COPY --from=builder /app/dist ./dist
 
+# Criar pasta de logs
+RUN mkdir -p /app/logs
+
 # Rodar aplicação
 CMD ["node", "dist/index.js"]

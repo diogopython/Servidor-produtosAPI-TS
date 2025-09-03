@@ -26,4 +26,7 @@ RUN npm install --only=production
 # Copiar apenas os arquivos compilados (sem node_modules de dev)
 COPY --from=builder /app/dist ./dist
 
+# Criar pasta de logs
+RUN mkdir -p /app/logs
+
 CMD ["node", "dist/index.js"]
