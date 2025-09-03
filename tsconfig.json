@@ -17,14 +17,10 @@
     "jsx": "react-jsx",
 
     "outDir": "./dist",   // saída dos arquivos compilados
-    "rootDir": "./"       // raiz do código fonte
+    "rootDir": "./src"       // raiz do código fonte
   },
   "include": [
     "src",
-    "routes",
-    "db.ts",
-    "funcGlobal.ts",
-    "mongo.ts"
   ],
   "exclude": [
     "node_modules",

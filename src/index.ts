@@ -2,10 +2,10 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import authRoutes from "../routes/auth";
-import produtoRoutes from "../routes/produtos";
+import authRoutes from "./routes/auth";
+import produtoRoutes from "./routes/produtos";
 
-import { HoraAtual, LogEvent } from "../funcGlobal";
+import { HoraAtual, LogEvent } from "./funcGlobal";
 
 dotenv.config();
 const app = express();
