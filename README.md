@@ -96,8 +96,7 @@ docker build -t api-produtos-node18-debian -f Docker/node18.Dockerfile .
 ### Run (exemplo)
 
 ```bash
-docker run --network sua_network \
-  --env-file /home/diogo/TS/.env \
+docker run --env-file /home/diogo/TS/.env \
   -p 3000:3000 \
   --name api-produtos \
   api-produtos-node22-alpine
@@ -106,7 +105,7 @@ docker run --network sua_network \
 > Se preferir, rode em uma linha só:
 
 ```bash
-docker run --network sua_network --env-file /home/diogo/TS/.env -p 3000:3000 --name api-produtos api-produtos-node22-alpine
+docker run --env-file /home/diogo/TS/.env -p 3000:3000 --name api-produtos api-produtos-node22-alpine
 ```
 
 ---
