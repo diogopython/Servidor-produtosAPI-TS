@@ -109,4 +109,5 @@ docker run -d \
 ```bash
 docker run -d --name api-produtos --env-file /your/path/.env -v /your/path/logs:/app/logs -p 3000:3000 api-produtos-node22
 ```
+
 ---
