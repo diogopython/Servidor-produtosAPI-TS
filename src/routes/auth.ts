@@ -39,7 +39,7 @@ router.post("/register", async (req: Request, res: Response) => {
     LogEvent(
       `[${HoraAtual()}][REGISTER][POST][ERROR] - Erro ao registrar usuário: ${email} - ${err.message}`
     );
-    res.status(500).json({ erro: err.message });
+    res.status(500).json({ erro: "Erro inesperado no login" });
   }
 });
 
@@ -47,7 +47,7 @@ router.post("/register", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   const { email, senha } = req.body;
   const UserIp = req.headers["userip"] as string;
-  LogEvent(`[${HoraAtual()}][LOGIN][POST] - Tentativa de login: ${email}`);
+  LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST] - Tentativa de login: ${email}`);
 
   try {
     const conn = await pool.getConnection();
@@ -59,12 +59,12 @@ router.post("/login", async (req: Request, res: Response) => {
     conn.release();
 
     if (!rows) {
-      LogEvent(`[${HoraAtual()}] Usuário não encontrado: ${email}`);
-      return res.status(401).json({ erro: "Usuário não encontrado" });
+      LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Usuario ou senha incorretos: ${email}`);
+      return res.status(401).json({ erro: "Usuario ou senha incorretos" });
     }
 
     const valido = await bcrypt.compare(senha, rows.senha);
-    if (!valido) return res.status(401).json({ erro: "Senha incorreta" });
+    if (!valido) return res.status(401).json({ erro: "Usuario ou senha incorretos" });
 
     const jwtSecret = process.env.JWT_SECRET as string;
     const expiresIn: string | number = process.env.JWT_EXPIRES_IN || "1h";
@@ -72,25 +72,25 @@ router.post("/login", async (req: Request, res: Response) => {
     const payload = { id: rows.id, ip: UserIp };
     const token = jwt.sign(payload, jwtSecret, { expiresIn } as any);
 
-    LogEvent(`[${HoraAtual()}] Login bem-sucedido: ${email}`);
+    LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Login bem-sucedido: ${email}`);
     res.json({ tokenUS: token, username: rows.nome });
   } catch (err: any) {
     LogEvent(
-      `[${HoraAtual()}][LOGIN][POST][ERROR] - Erro no login do usuário ${email} - ${err.message}`
+      `[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST][ERROR] - Erro no login do usuário ${email} - ${err.message}`
     );
-    res.status(500).json({ erro: err.message });
+    res.status(500).json({ erro: "Erro inesperado no login" });
   }
 });
 
 // Rota: Logout
 router.post("/logout", autenticar, async (req: Request, res: Response) => {
-  LogEvent(`[${HoraAtual()}][LOGOUT][POST] - Logout solicitado pelo usuário ID: ${req.userId}`);
+  LogEvent(`[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Logout solicitado pelo usuário ID: ${req.userId}`);
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
   if (!token) {
     LogEvent(
-      `[${HoraAtual()}][LOGOUT][POST] - Falha: Token não fornecido para logout do usuário ID: ${req.userId}`
+      `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Falha: Token não fornecido para logout do usuário ID: ${req.userId}`
     );
     return res.status(401).json({ erro: "Token não fornecido" });
   }
@@ -100,16 +100,16 @@ router.post("/logout", autenticar, async (req: Request, res: Response) => {
 
     if (!resp[0]) {
       LogEvent(
-        `[${HoraAtual()}][LOGOUT][POST][ERROR] - Erro ao registrar token usado no logout do usuário ID: ${req.userId} - ${resp[1].message}`
+        `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST][ERROR] - Erro ao registrar token usado no logout do usuário ID: ${req.userId} - ${resp[1].message}`
       );
       return res.status(500).json({ erro: resp[1].message });
     }
 
-    LogEvent(`[${HoraAtual()}][LOGOUT][POST] - Logout realizado com sucesso para usuário ID: ${req.userId}`);
+    LogEvent(`[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Logout realizado com sucesso para usuário ID: ${req.userId}`);
     return res.status(200).json({ mensagem: "Logout realizado com sucesso." });
   } catch (error: any) {
     LogEvent(
-      `[${HoraAtual()}][LOGOUT][POST][ERROR] - Erro inesperado no logout do usuário ID: ${req.userId} - ${error.message}`
+      `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST][ERROR] - Erro inesperado no logout do usuário ID: ${req.userId} - ${error.message}`
     );
     return res.status(500).json({ erro: "Erro inesperado no logout." });
   }

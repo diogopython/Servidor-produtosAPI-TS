@@ -5,3 +5,4 @@ Produtos-CLI-Web/
 node_modules/
 client/
 clientePY/
+dist/

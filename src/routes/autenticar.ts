@@ -8,6 +8,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      userIp?: string;
     }
   }
 }
@@ -52,6 +53,7 @@ export async function autenticar(req: Request, res: Response, next: NextFunction
     LogEvent(`[${HoraAtual()}] IP do usuário corresponde ao token: ${UserIp}`);
 
     req.userId = decoded.id;
+    req.userIp = UserIp;
     next();
   } catch (err) {
     return res.status(403).json({ erro: "Token inválido ou expirado" });
