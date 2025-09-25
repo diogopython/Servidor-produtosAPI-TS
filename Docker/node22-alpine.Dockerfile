@@ -1,9 +1,6 @@
 # Etapa 1: Build
 FROM node:22-alpine AS builder
 
-# Instalar ferramentas de build necessárias
-#RUN apk add --no-cache git python3 make g++
-
 WORKDIR /app
 
 # Copiar package.json e tsconfig

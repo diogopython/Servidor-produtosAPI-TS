@@ -1,7 +1,8 @@
 Tests/
 .env
-log-server.log
+logs/
 Produtos-CLI-Web/
+Produtos-CLI-Web-source/
 node_modules/
 client/
 clientePY/

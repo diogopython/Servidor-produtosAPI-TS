@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { HoraAtual, LogEvent } from "../funcGlobal";
-import { tokenJaUsado } from "../mongo";
+import { tokenJaUsado, HashTokenJaUsado } from "../mongo";
 
 // Extender o Request para incluir `userId`
 declare global {
@@ -13,14 +13,14 @@ declare global {
   }
 }
 
-function verificarTokenJWT(token: string): JwtPayload & { id: string; ip: string } {
+export function verificarTokenJWT(token: string): JwtPayload & { id: string; ip: string; hash: string } {
   if (!token) throw new Error("Token ausente");
 
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET não definido");
 
   try {
-    const decoded = jwt.verify(token, secret) as JwtPayload & { id: string; ip: string };
+    const decoded = jwt.verify(token, secret) as JwtPayload & { id: string; ip: string; hash: string };
     return decoded;
   } catch (err) {
     throw new Error("Token inválido ou expirado");
@@ -44,13 +44,23 @@ export async function autenticar(req: Request, res: Response, next: NextFunction
 
     // Verifica se token já foi usado
     const usado = await tokenJaUsado(token);
-    if (usado) return res.status(403).json({ erro: "Token já usado ou inválido" });
+    if (usado) {
+      return res.status(403).json({ erro: "Token já usado ou inválido" });
+    }
     LogEvent(`[${HoraAtual()}] verify token in mongodb: ${usado}`);
 
-    if (UserIp !== decoded.ip)
+    if (UserIp !== decoded.ip){
+      LogEvent(`[${HoraAtual()}] erro IP do usuário não corresponde ao token`)
       return res.status(403).json({ erro: "IP do usuário não corresponde ao token" });
+    }
 
-    LogEvent(`[${HoraAtual()}] IP do usuário corresponde ao token: ${UserIp}`);
+    const hash_usado = await HashTokenJaUsado(decoded.hash)
+    if (!hash_usado) {
+      LogEvent(`[${HoraAtual()}] Hash de integridade do token violado`)
+      return res.status(403).json({ erro: "Hash de integridade do token violado" });
+    }
+
+    LogEvent(`[${HoraAtual()}] Token verificado com sucesso: ${UserIp}`);
 
     req.userId = decoded.id;
     req.userIp = UserIp;
