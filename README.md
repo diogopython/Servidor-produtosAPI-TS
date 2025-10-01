@@ -115,13 +115,14 @@ docker run -d \
   --env-file /your/path/.env \
   -v /your/path/logs:/app/logs \
   -p 3000:3000 \
+  -p 4040:4040 \
   api-produtos-node22
 ```
 
 > Se preferir, rode em uma linha só:
 
 ```bash
-docker run -d --name api-produtos --env-file /your/path/.env -v /your/path/logs:/app/logs -p 3000:3000 api-produtos-node22
+docker run -d --name api-produtos --env-file /your/path/.env -v /your/path/logs:/app/logs -p 3000:3000 -p 4040:4040 api-produtos-node22
 ```
 
 ---
