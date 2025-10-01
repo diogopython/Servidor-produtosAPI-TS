@@ -1,10 +1,11 @@
-# API de Produtos
+# Gerenciador de Produtos
+# API:
 
 Uma **API RESTful** para gerenciamento de produtos, construída com **TypeScript**, **Node.js**, **Express**, **MongoDB** e **MariaDB**. Permite realizar operações de **CRUD** (Criar, Ler, Atualizar e Deletar) produtos, com autenticação de usuários e registro de logs.
 
 ---
 
-## Tecnologias Utilizadas
+### Tecnologias Utilizadas
 
 * **Node.js + TypeScript**
 * **Express**
@@ -25,7 +26,8 @@ Uma **API RESTful** para gerenciamento de produtos, construída com **TypeScript
   * Pesquisar por produtos
 * Autenticação com JWT
 * Registro de logs de operações
-* Suporte a múltiplos bancos de dados (**MongoDB** e **MariaDB**)
+* Geraçao e altentificaçao por credenciais JWT
+* Rota para apagar a conta
 
 ---
 
@@ -47,6 +49,7 @@ npm install
 ### 3. Configurar o arquivo `.env` (exemplo)
 
 ```env
+## API SERVER =>
 # MariaDB
 DB_HOST=localhost
 DB_USER=root
@@ -68,6 +71,17 @@ PORT=3000
 # Manutenção
 VALID=true
 MSG='Estamos em manutenção, por favor aguarde e tente novamente mais tarde.'
+
+# Email
+SMTP_ACTIV=true
+SMTP_SERVER=servidor_email
+SMTP_PORT=porta_do_servidor
+SMTP_USER=seu_email_do_serviço
+SMTP_PASS=sua_senha
+ADMIN_EMAIL=email_para_ser_avisado_pelo_servidor
+
+## WEB SERVER =>
+WEB_PORT=4040
 ```
 
 ### 4. Rodar a API em modo de desenvolvimento
@@ -111,3 +125,41 @@ docker run -d --name api-produtos --env-file /your/path/.env -v /your/path/logs:
 ```
 
 ---
+
+# WEB:
+# 🌐 Produtos-CLI-Web
+
+---
+
+## 🚀 Funcionalidades
+
+- 🔑 **Login**
+- 📝 **Registro de usuário**
+- 💾 **Login automático via credencial salva no navegador**
+- ➕ **Adicionar produtos**
+- ❌ **Remover produtos**
+- 🚪 **Logout**
+- 🗑️ **Apagar conta**
+
+---
+
+## 🛠️ Tecnologias
+
+- **HTML5**
+- **CSS3**
+- **JavaScript (Vanilla JS)**
+
+---
+
+## 📦 Como usar
+
+1. A aplicaçao web e iniciada junto com a api comum simples:
+   ```bash
+   npm run dev
+   ```
+
+---
+# Imagem
+
+- **Images do projeto**
+- ![Screenshot ilustrativa do projeto](./screenshot.png)

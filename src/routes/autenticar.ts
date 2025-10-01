@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { HoraAtual, LogEvent } from "../funcGlobal";
+import { LogEvent, ValidIP } from "../funcGlobal";
 import { tokenJaUsado, HashTokenJaUsado } from "../mongo";
 
 // Extender o Request para incluir `userId`
@@ -39,6 +39,9 @@ export async function autenticar(req: Request, res: Response, next: NextFunction
     const token = authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ erro: "Token ausente" });
 
+    const ip_valido = await ValidIP(UserIp, req);
+    if (!ip_valido) return res.status(400).json({ erro: "IP invalido" })
+
     // Verifica validade JWT
     const decoded = verificarTokenJWT(token);
 
@@ -47,20 +50,20 @@ export async function autenticar(req: Request, res: Response, next: NextFunction
     if (usado) {
       return res.status(403).json({ erro: "Token já usado ou inválido" });
     }
-    LogEvent(`[${HoraAtual()}] verify token in mongodb: ${usado}`);
+    LogEvent(`verify token in mongodb: ${usado}`);
 
     if (UserIp !== decoded.ip){
-      LogEvent(`[${HoraAtual()}] erro IP do usuário não corresponde ao token`)
+      LogEvent(`erro IP do usuário não corresponde ao token`)
       return res.status(403).json({ erro: "IP do usuário não corresponde ao token" });
     }
 
     const hash_usado = await HashTokenJaUsado(decoded.hash)
     if (!hash_usado) {
-      LogEvent(`[${HoraAtual()}] Hash de integridade do token violado`)
+      LogEvent(`Hash de integridade do token violado`)
       return res.status(403).json({ erro: "Hash de integridade do token violado" });
     }
 
-    LogEvent(`[${HoraAtual()}] Token verificado com sucesso: ${UserIp}`);
+    LogEvent(`Token verificado com sucesso: ${UserIp}`);
 
     req.userId = decoded.id;
     req.userIp = UserIp;

@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { LogEvent, HoraAtual } from "./funcGlobal"
+import { LogEvent } from "./funcGlobal"
 import dotenv from "dotenv"
 
 dotenv.config();
@@ -34,7 +34,7 @@ export async function HashTokenJaUsado(hash: string): Promise<boolean> {
     const res = await colecao.findOne({ hash });
     return !!res; // true se hash token está usado
   } catch (err) {
-    LogEvent(`[${HoraAtual()}] error in HashTokenJaUsado: ${err}`);
+    LogEvent(`error in HashTokenJaUsado: ${err}`);
     return false;
   }
 }
@@ -68,7 +68,7 @@ export async function tokenJaUsado(token: string): Promise<boolean> {
     const res = await colecao.findOne({ token });
     return !!res; // true se token está usado
   } catch (err) {
-    LogEvent(`[${HoraAtual()}] error in tokenJaUsado: ${err}`);
+    LogEvent(`error in tokenJaUsado: ${err}`);
     return false;
   }
 }

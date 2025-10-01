@@ -4,25 +4,19 @@ import * as jwt from 'jsonwebtoken'; // Import “namespace” obrigatório no T
 import { v4 as uuidv4 } from 'uuid';
 import { autenticar, verificarTokenJWT } from "./autenticar";
 import { registrarTokenUsado, registrarHashToken, HashTokenJaUsado } from "../mongo"
-import { HoraAtual, LogEvent } from "../funcGlobal";
+import { LogEvent } from "../funcGlobal";
 import dotenv from "dotenv";
 import pool from "../db";
+import * as Mail from "../mail";
 
 dotenv.config();
 
 const router = Router();
 
-interface User {
-  id: number;
-  nome: string;
-  email: string;
-  senha: string;
-}
-
 // Rota: Registro
 router.post("/register", async (req: Request, res: Response) => {
   const { nome, email, senha } = req.body;
-  LogEvent(`[${HoraAtual()}][REGISTER][POST] - Tentativa de registro do usuário: ${email}`);
+  LogEvent(`[REGISTER][POST] - Tentativa de registro do usuário: ${email}`);
 
   try {
     const hashed = await bcrypt.hash(senha, 10);
@@ -34,11 +28,16 @@ router.post("/register", async (req: Request, res: Response) => {
     ]);
     conn.release();
 
-    LogEvent(`[${HoraAtual()}][REGISTER][POST] - Usuário registrado com sucesso: ${email}`);
+    await Promise.all([
+      Mail.BoasVindas(nome, email),
+      Mail.AvisoRegistro(nome, email)
+    ]);
+
+    LogEvent(`[REGISTER][POST] - Usuário registrado com sucesso: ${email}`);
     res.status(201).json({ msg: "Usuário registrado com sucesso" });
   } catch (err: any) {
     LogEvent(
-      `[${HoraAtual()}][REGISTER][POST][ERROR] - Erro ao registrar usuário: ${email} - ${err.message}`
+      `[REGISTER][POST][ERROR] - Erro ao registrar usuário: ${email} - ${err.message}`
     );
     res.status(500).json({ erro: "Erro inesperado no login" });
   }
@@ -48,7 +47,12 @@ router.post("/register", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   const { email, senha } = req.body;
   const UserIp = req.headers["userip"] as string;
-  LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST] - Tentativa de login: ${email}`);
+
+  if (!email) return res.status(400).json({ erro: "Email do usuario ausente" });
+  if (!senha) return res.status(400).json({ erro: "Senha do usuario ausente" });
+  if (!UserIp) return res.status(400).json({ erro: "IP do usuario ausente" });
+
+  LogEvent(`[${UserIp}][LOGIN][POST] - Tentativa de login: ${email}`);
 
   try {
     const conn = await pool.getConnection();
@@ -60,7 +64,7 @@ router.post("/login", async (req: Request, res: Response) => {
     conn.release();
 
     if (!rows) {
-      LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Usuario ou senha incorretos: ${email}`);
+      LogEvent(`[${UserIp}] Usuario ou senha incorretos: ${email}`);
       return res.status(401).json({ erro: "Usuario ou senha incorretos" });
     }
 
@@ -77,11 +81,13 @@ router.post("/login", async (req: Request, res: Response) => {
     const payload = { id: rows.id, ip: UserIp, hash };
     const token = jwt.sign(payload, jwtSecret, { expiresIn } as any);
 
-    LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Login bem-sucedido: ${email}`);
+    Mail.AvisoLogin(rows.nome, rows.email, UserIp)
+
+    LogEvent(`[${UserIp}] Login bem-sucedido: ${email}`);
     res.json({ tokenUS: token, username: rows.nome });
   } catch (err: any) {
     LogEvent(
-      `[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST][ERROR] - Erro no login do usuário ${email} - ${err.message}`
+      `[${UserIp}][LOGIN][POST][ERROR] - Erro no login do usuário ${email} - ${err.message}`
     );
     res.status(500).json({ erro: "Erro inesperado no login" });
   }
@@ -89,13 +95,13 @@ router.post("/login", async (req: Request, res: Response) => {
 
 // Rota: Logout
 router.post("/logout", autenticar, async (req: Request, res: Response) => {
-  LogEvent(`[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Logout solicitado pelo usuário ID: ${req.userId}`);
+  LogEvent(`[${req.userIp}][LOGOUT][POST] - Logout solicitado pelo usuário ID: ${req.userId}`);
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
   if (!token) {
     LogEvent(
-      `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Falha: Token não fornecido para logout do usuário ID: ${req.userId}`
+      `[${req.userIp}][LOGOUT][POST] - Falha: Token não fornecido para logout do usuário ID: ${req.userId}`
     );
     return res.status(401).json({ erro: "Token não fornecido" });
   }
@@ -105,16 +111,16 @@ router.post("/logout", autenticar, async (req: Request, res: Response) => {
 
     if (!resp[0]) {
       LogEvent(
-        `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST][ERROR] - Erro ao registrar token usado no logout do usuário ID: ${req.userId} - ${resp[1].message}`
+        `[${req.userIp}][LOGOUT][POST][ERROR] - Erro ao registrar token usado no logout do usuário ID: ${req.userId} - ${resp[1].message}`
       );
       return res.status(500).json({ erro: resp[1].message });
     }
 
-    LogEvent(`[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST] - Logout realizado com sucesso para usuário ID: ${req.userId}`);
+    LogEvent(`[${req.userIp}][LOGOUT][POST] - Logout realizado com sucesso para usuário ID: ${req.userId}`);
     return res.status(200).json({ msg: "Logout realizado com sucesso." });
   } catch (error: any) {
     LogEvent(
-      `[${req.userIp || "*null*"}][${HoraAtual()}][LOGOUT][POST][ERROR] - Erro inesperado no logout do usuário ID: ${req.userId} - ${error.message}`
+      `[${req.userIp}][LOGOUT][POST][ERROR] - Erro inesperado no logout do usuário ID: ${req.userId} - ${error.message}`
     );
     return res.status(500).json({ erro: "Erro inesperado no logout." });
   }
@@ -122,7 +128,7 @@ router.post("/logout", autenticar, async (req: Request, res: Response) => {
 
 router.delete("/delacct", autenticar, async (req: Request, res: Response) => {
   LogEvent(
-    `[${req.userIp || "*null*"}][${HoraAtual()}][DELACCT][DELETE] - Solicitação para deletar conta do usuário ID: ${req.userId}`
+    `[${req.userIp}][DELACCT][DELETE] - Solicitação para deletar conta do usuário ID: ${req.userId}`
   );
 
   const authHeader = req.headers.authorization;
@@ -130,7 +136,7 @@ router.delete("/delacct", autenticar, async (req: Request, res: Response) => {
 
   if (!token) {
     LogEvent(
-      `[${req.userIp || "*null*"}][${HoraAtual()}][DELACCT][DELETE] - Falha: Token não fornecido (usuário ID: ${req.userId})`
+      `[${req.userIp}][DELACCT][DELETE] - Falha: Token não fornecido (usuário ID: ${req.userId})`
     );
     return res.status(401).json({ erro: "Token não fornecido" });
   }
@@ -138,6 +144,11 @@ router.delete("/delacct", autenticar, async (req: Request, res: Response) => {
   let conn;
   try {
     conn = await pool.getConnection();
+    const [rows] = await conn.execute(
+      "SELECT * FROM users WHERE id = ?",
+      [req.userId]
+    );
+    conn.release();
     await conn.beginTransaction();
 
     // Deleta produtos relacionados ao usuário
@@ -148,15 +159,17 @@ router.delete("/delacct", autenticar, async (req: Request, res: Response) => {
 
     await conn.commit();
     LogEvent(
-      `[${req.userIp || "*null*"}][${HoraAtual()}][DELACCT][DELETE] - Conta do usuário ID: ${req.userId} deletada com sucesso`
+      `[${req.userIp}][DELACCT][DELETE] - Conta do usuário ID: ${req.userId} deletada com sucesso`
     );
+
+    Mail.AvisoExclusaoConta(rows.nome, rows.email)
 
     return res.status(200).json({ msg: "Conta deletada com sucesso" });
 
   } catch (err: any) {
     if (conn) await conn.rollback();
     LogEvent(
-      `[${req.userIp || "*null*"}][${HoraAtual()}][DELACCT][DELETE][ERROR] - Erro ao deletar conta do usuário ID: ${req.userId} - ${err.message}`
+      `[${req.userIp}][DELACCT][DELETE][ERROR] - Erro ao deletar conta do usuário ID: ${req.userId} - ${err.message}`
     );
     return res.status(500).json({ erro: "Erro inesperado ao deletar conta." });
   } finally {
@@ -166,7 +179,8 @@ router.delete("/delacct", autenticar, async (req: Request, res: Response) => {
 
 router.post("/GeCredential", autenticar,async (req: Request, res: Response) => {
   const UserIp = req.headers["userip"] as string;
-  LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST] - Tentativa de gerar a credencial: ${req.userId}`);
+
+  LogEvent(`[${UserIp}][LOGIN][POST] - Tentativa de gerar a credencial: ${req.userId}`);
 
   try {
     const conn = await pool.getConnection();
@@ -185,11 +199,11 @@ router.post("/GeCredential", autenticar,async (req: Request, res: Response) => {
 
     await registrarHashToken(hash)
 
-    LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Credencial gerada bem-sucedido: ${req.userId}`);
+    LogEvent(`[${UserIp || "*null*"}] Credencial gerada bem-sucedido: ${req.userId}`);
     res.json({ tokenUS: token });
   } catch (err: any) {
     LogEvent(
-      `[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST][ERROR] - Erro ao gerar a credencial do usuário ${req.userId} - ${err.message}`
+      `[${UserIp || "*null*"}][LOGIN][POST][ERROR] - Erro ao gerar a credencial do usuário ${req.userId} - ${err.message}`
     );
     res.status(500).json({ erro: "Erro inesperado ao gerar a credencial" });
   }
@@ -198,7 +212,11 @@ router.post("/GeCredential", autenticar,async (req: Request, res: Response) => {
 router.post("/LoginByCredential", async (req: Request, res: Response) => {
   const { cred } = req.body;
   const UserIp = req.headers["userip"] as string;
-  LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST] - Tentativa de login por credencial`);
+
+  if (!cred) return res.status(400).json({ erro: "credencial ausente" });
+  if (!UserIp) return res.status(400).json({ erro: "IP ausente" });
+
+  LogEvent(`[${UserIp || "*null*"}][LOGIN][POST] - Tentativa de login por credencial`);
 
   let rows;
   try {
@@ -218,7 +236,7 @@ router.post("/LoginByCredential", async (req: Request, res: Response) => {
     conn.release();
 
     if (!rows) {
-      LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Nao foi possivel o login por credencial: ${id}`);
+      LogEvent(`[${UserIp || "*null*"}] Nao foi possivel o login por credencial: ${id}`);
       return res.status(401).json({ erro: "Nao foi possivel o login por credencial." });
     }
 
@@ -231,11 +249,11 @@ router.post("/LoginByCredential", async (req: Request, res: Response) => {
 
     await registrarHashToken(hash_)
 
-    LogEvent(`[${UserIp || "*null*"}][${HoraAtual()}] Login por credencial bem-sucedido: ${rows.email}`);
+    LogEvent(`[${UserIp || "*null*"}] Login por credencial bem-sucedido: ${rows.email}`);
     res.json({ tokenUS: token, username: rows.nome });
   } catch (err: any) {
     LogEvent(
-      `[${UserIp || "*null*"}][${HoraAtual()}][LOGIN][POST][ERROR] - Erro no login do usuário ${rows.email} - ${err.message}`
+      `[${UserIp || "*null*"}][LOGIN][POST][ERROR] - Erro no login do usuário ${rows.email} - ${err.message}`
     );
     res.status(500).json({ erro: "Erro inesperado no login" });
   }

@@ -20,7 +20,7 @@
     "rootDir": "./src"       // raiz do código fonte
   },
   "include": [
-    "src",
+    "src", "src/mail.ts", "Tests/Produtos-CLI-Web",
   ],
   "exclude": [
     "node_modules",
